@@ -54,7 +54,7 @@ Route::middleware(['auth'])->group(function () {
 // ================= INTERNAL (AUTH) =================
 Route::middleware('auth')->group(function () {
 
-    // WORKER DASHBOARD (KENA FORCE PASSWORD)
+    // WORKER DASHBOARD
     Route::middleware('force.password')->group(function () {
 
         Route::get('/dashboard', [DashboardWorkerController::class, 'index'])
