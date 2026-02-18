@@ -26,8 +26,8 @@ use App\Models\ActivityLog;
 
 // ================= PUBLIK =================
 Route::get('/', function () {
-    return view('dashboardPublic');
-})->name('dashboardPublic');
+    return view('loginForm');
+})->name('loginForm');
 
 
 // ================= AUTH =================
