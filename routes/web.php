@@ -24,13 +24,12 @@ use App\Models\KategoriKeuangan;
 use App\Models\ActivityLog;
 
 
-// ================= PUBLIK =================
 Route::get('/', function () {
     return view('loginForm');
 })->name('loginForm');
 
 
-// ================= AUTH =================
+// AUTH
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
@@ -41,7 +40,7 @@ Route::post('/logout', [LogoutController::class, 'logout'])
     ->name('logout');
 
 
-// ================= FORCE CHANGE PASSWORD =================
+// FORCE CHANGE PASSWORD 
 Route::middleware(['auth'])->group(function () {
     Route::get('/change-password', [ChangePasswordController::class, 'form'])
         ->name('password.change.form');
@@ -51,7 +50,7 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
-// ================= INTERNAL (AUTH) =================
+//  INTERNAL (AUTH) 
 Route::middleware('auth')->group(function () {
 
     // WORKER DASHBOARD
@@ -96,7 +95,7 @@ Route::middleware('auth')->group(function () {
     });
 
 
-    // ================= ADMIN =================
+    // ADMIN 
     Route::prefix('admin')
         ->middleware('admin')
         ->name('admin.')
