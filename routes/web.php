@@ -25,8 +25,8 @@ use App\Models\ActivityLog;
 
 
 Route::get('/', function () {
-    return view('loginForm');
-})->name('loginForm');
+    return redirect()->route('login');
+})->name('home');
 
 
 // AUTH
