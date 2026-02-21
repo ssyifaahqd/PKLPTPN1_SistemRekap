@@ -117,8 +117,8 @@ class ExportLabaRugiController extends Controller
         }
 
         $judul = $bulan !== null
-            ? "Laporan Laba Rugi — {$bulanMap[$bulan]}"
-            : "Laporan Laba Rugi";
+            ? "Laporan Laba Rugi Agrowisata — {$bulanMap[$bulan]}"
+            : "Laporan Laba Rugi Agrowisata";
 
         $html = $this->buildHtml($judul, $bulan, $dataByYear);
 

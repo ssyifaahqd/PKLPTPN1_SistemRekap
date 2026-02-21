@@ -80,7 +80,6 @@
       font-weight:700;
     }
 
-    /* ✅ tambahan tombol outline biar sama kayak Produksi Kopi */
     .btn.outline{
       background:#fff;
       border-color: rgba(46,125,50,.38);
@@ -409,8 +408,8 @@
       <div class="heroMedia"></div>
       <div class="heroInner">
         <div class="heroTitle">
-          <h1>Laba Rugi Bulanan</h1>
-          <p>Input dan evaluasi pendapatan & biaya per bulan untuk 3 kategori (Wahana, Resto, Penginapan). Data ditampilkan rapi seperti format pivot Excel.</p>
+          <h1>Laba Rugi Bulanan Agrowisata</h1>
+          <p>Input dan evaluasi pendapatan & biaya per bulan untuk 3 kategori (Wahana, Resto, Penginapan). </p>
         </div>
       </div>
     </div>
@@ -556,6 +555,10 @@
               <a class="btn outline"
                  href="{{ route('worker.export.laba_rugi', request()->only(['tahun','bulan'])) }}">
                 Export PDF
+              </a>
+              <a class="btn outline"
+                 href="{{ route('worker.excel.laba_rugi', request()->only(['tahun','bulan'])) }}">
+                Export Excel
               </a>
             </div>
           </div>

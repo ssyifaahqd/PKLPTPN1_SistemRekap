@@ -527,6 +527,10 @@
                  href="{{ route('worker.export.produksi_kopi', request()->only(['tahun'])) }}">
                 Export PDF
               </a>
+              <a class="btn outline"
+                 href="{{ route('worker.excel.produksi_kopi', request()->only(['tahun'])) }}">
+                Export Excel
+              </a>
             </div>
           </div>
         </form>

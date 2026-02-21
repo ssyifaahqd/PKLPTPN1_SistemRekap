@@ -503,7 +503,7 @@
           <div class="cardBody">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
               <div>
-                <strong style="display:block; font-size:16px;">Ringkasan Laba Rugi</strong>
+                <strong style="display:block; font-size:16px;">Ringkasan Laba Rugi Agrowisata</strong>
                 <span class="muted" style="font-size:13px;">Periode {{ $periodeLabel }}</span>
               </div>
             </div>
@@ -620,7 +620,7 @@
               </svg>
             </div>
             <div class="quickText">
-              <strong>Kelola Laba Rugi</strong>
+              <strong>Kelola Laba Rugi Agrowisata</strong>
               <div class="muted">
                 Input pendapatan/biaya, persediaan, dan review kinerja periode berjalan.
               </div>

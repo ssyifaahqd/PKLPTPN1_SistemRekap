@@ -12,6 +12,8 @@ use App\Http\Controllers\Worker\InputProduksiKopiController;
 use App\Http\Controllers\Worker\InputLabaRugiController;
 use App\Http\Controllers\Worker\ExportProduksiKopiController;
 use App\Http\Controllers\Worker\ExportLabaRugiController;
+use App\Http\Controllers\Worker\ExcelLabaRugiController;
+use App\Http\Controllers\Worker\ExcelProduksiKopiController;
 
 use App\Http\Controllers\Admin\InputKaryawanBaruController;
 use App\Http\Controllers\Admin\ActivityLogController;
@@ -90,8 +92,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/export/laba-rugi', [ExportLabaRugiController::class, 'labaRugi'])
             ->name('worker.export.laba_rugi');
 
+        Route::get('/export/laba-rugi/excel', [ExcelLabaRugiController::class, 'export'])
+            ->name('worker.excel.laba_rugi');
+
         Route::get('/export/produksi-kopi', [ExportProduksiKopiController::class, 'produksiKopi'])
             ->name('worker.export.produksi_kopi');
+
+        Route::get('/export/produksi-kopi/excel', [ExcelProduksiKopiController::class, 'export'])
+            ->name('worker.excel.produksi_kopi');
     });
 
 
