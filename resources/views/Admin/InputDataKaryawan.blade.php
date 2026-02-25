@@ -236,6 +236,7 @@
       border-color: rgba(46,125,50,.45);
       box-shadow: 0 0 0 4px rgba(46,125,50,.12);
     }
+    input[readonly]{ background:#f3f4f6; color:#111827; }
 
     .stickyActions{
       display:flex;
@@ -435,23 +436,12 @@
               <div class="row">
                 <div class="field" style="max-width:360px;">
                   <label>Personnel Number</label>
-                  <input
-                    name="personnel_number"
-                    value="{{ old('personnel_number') }}"
-                    placeholder="Contoh: 240000123"
-                    inputmode="numeric"
-                    required
-                  />
+                  <input name="personnel_number" value="{{ old('personnel_number') }}" placeholder="Contoh: 240000123" inputmode="numeric" required />
                 </div>
 
                 <div class="field">
                   <label>Nama</label>
-                  <input
-                    name="name"
-                    value="{{ old('name') }}"
-                    placeholder="Nama karyawan"
-                    required
-                  />
+                  <input name="name" value="{{ old('name') }}" placeholder="Nama karyawan" required />
                 </div>
               </div>
 
@@ -466,11 +456,7 @@
 
                 <div class="field">
                   <label>Divisi</label>
-                  <input
-                    name="division_name"
-                    value="{{ old('division_name') }}"
-                    placeholder="Contoh: Produksi / Keuangan / Afdeling"
-                  />
+                  <input name="division_name" value="{{ old('division_name') }}" placeholder="Contoh: Produksi / Keuangan / Afdeling" />
                 </div>
               </div>
 
@@ -506,11 +492,7 @@
             </thead>
             <tbody>
               @forelse($karyawanList as $k)
-                <tr
-                  data-personnel="{{ $k->personnel_number }}"
-                  data-name="{{ e($k->name) }}"
-                  data-division="{{ e($k->division_name ?? '') }}"
-                >
+                <tr data-personnel="{{ $k->personnel_number }}" data-name="{{ e($k->name) }}" data-division="{{ e($k->division_name ?? '') }}">
                   <td><span class="badge">{{ $k->personnel_number }}</span></td>
                   <td style="text-align:left; white-space:normal;"><strong>{{ $k->name }}</strong></td>
                   <td><span class="badge navy">{{ $k->employment_status ?? 'Active' }}</span></td>
@@ -535,10 +517,6 @@
             </tbody>
           </table>
         </div>
-
-        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-          <a class="btn outline" href="{{ route('admin.dashboard') }}">Kembali ke Dashboard</a>
-        </div>
       </div>
     </div>
   </div>
@@ -558,7 +536,8 @@
           <div class="row">
             <div class="field" style="max-width:360px;">
               <label>Personnel Number</label>
-              <input id="editPersonnel" disabled />
+              <input id="editPersonnel" readonly />
+              <input type="hidden" name="personnel_number" id="editPersonnelHidden" />
             </div>
             <div class="field">
               <label>Nama</label>
@@ -597,6 +576,7 @@
     const editForm = document.getElementById('editForm');
 
     const editPersonnel = document.getElementById('editPersonnel');
+    const editPersonnelHidden = document.getElementById('editPersonnelHidden');
     const editName = document.getElementById('editName');
     const editDivision = document.getElementById('editDivision');
 
@@ -619,6 +599,7 @@
         const division = tr.getAttribute('data-division') || '';
 
         editPersonnel.value = personnel;
+        editPersonnelHidden.value = personnel;
         editName.value = name;
         editDivision.value = division;
 

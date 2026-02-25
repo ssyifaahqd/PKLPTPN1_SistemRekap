@@ -15,7 +15,7 @@ use App\Http\Controllers\Worker\ExportLabaRugiController;
 use App\Http\Controllers\Worker\ExcelLabaRugiController;
 use App\Http\Controllers\Worker\ExcelProduksiKopiController;
 
-use App\Http\Controllers\Admin\InputKaryawanBaruController;
+use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\DashboardAdminController;
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\HTTP\Controllers\Admin\AdminUserController;
@@ -122,13 +122,13 @@ Route::middleware('auth')->group(function () {
                 return view('admin.InputDataKaryawan', compact('karyawanList'));
             })->name('karyawan.create');
 
-            Route::post('/karyawan', [InputKaryawanBaruController::class, 'store'])
+            Route::post('/karyawan', [KaryawanController::class, 'store'])
                 ->name('karyawan.store');
 
-            Route::put('/karyawan/{personnel_number}', [InputKaryawanBaruController::class, 'update'])
+            Route::put('/karyawan/{personnel_number}', [KaryawanController::class, 'update'])
                 ->name('karyawan.update');
 
-            Route::delete('/karyawan/{personnel_number}', [InputKaryawanBaruController::class, 'destroy'])
+            Route::delete('/karyawan/{personnel_number}', [KaryawanController::class, 'destroy'])
                 ->name('karyawan.destroy');
 
             Route::get('/activity-logs', [ActivityLogController::class, 'index'])
