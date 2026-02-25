@@ -299,6 +299,26 @@
       line-height:1.6;
     }
 
+    .trendGrid{ display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:14px; }
+    .trendCard{
+      border:1px solid var(--border);
+      border-radius:16px;
+      background:#fff;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .trendHead{
+      padding:14px 14px 8px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .trendHead strong{ font-size:16px; font-weight:950; }
+    .trendHead a{ font-size:13px; color:var(--green-700); font-weight:800; }
+    .trendBody{ padding:0 14px 14px; }
+    .trendBody canvas{ width:100% !important; height:240px !important; }
+
     .quickGrid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:18px; }
 
     .quickCard{
@@ -370,6 +390,8 @@
       .hamburger{ display:block; }
 
       .stats{ grid-template-columns: 1fr; }
+      .trendGrid{ grid-template-columns: 1fr; }
+      .trendBody canvas{ height:260px !important; }
       .quickGrid{ grid-template-columns: 1fr; }
       .summaryHead{ align-items:flex-start; flex-direction:column; }
       .summaryDate{ margin-top:-6px; }
@@ -394,6 +416,16 @@
     }
 
     $todayLabel = now()->translatedFormat('d F Y');
+
+    $trendYears = $trendYears ?? [];
+    $trendProduksi = $trendProduksi ?? [];
+    $trendLabaRugi = $trendLabaRugi ?? [];
+
+    if (!count($trendYears)) {
+      $trendYears = [2025, 2026];
+      $trendProduksi = [81823, 0];
+      $trendLabaRugi = [31700000, 0];
+    }
   @endphp
 
   <div class="topbar">
@@ -497,6 +529,28 @@
               <div class="num">{{ number_format((int)$adminStats['logs_today'], 0, ',', '.') }}</div>
               <div class="label">Aktivitas Hari Ini</div>
               <div class="desc">Log sistem tercatat</div>
+            </div>
+          </div>
+
+          <div class="trendGrid">
+            <div class="trendCard">
+              <div class="trendHead">
+                <strong>Grafik Produksi Kopi Kering</strong>
+                <span class="summaryDate" id="prodRange">-</span>
+              </div>
+              <div class="trendBody">
+                <canvas id="trendProduksiChart"></canvas>
+              </div>
+            </div>
+
+            <div class="trendCard">
+              <div class="trendHead">
+                <strong>Grafik Laba/Rugi Agrowisata</strong>
+                <span class="summaryDate" id="labaRange">-</span>
+              </div>
+              <div class="trendBody">
+                <canvas id="trendLabaRugiChart"></canvas>
+              </div>
             </div>
           </div>
 
@@ -638,6 +692,8 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <script>
     const dd = document.getElementById("akunDropdown");
     const dropBtn = dd?.querySelector(".dropbtn");
@@ -716,6 +772,238 @@
         : getCurrentSectionId();
       if (id) setActiveTab(id);
     });
+
+    const trendYearsRaw = @json($trendYears ?? []);
+    const trendProduksiRaw = @json($trendProduksi ?? []);
+    const trendLabaRugiRaw = @json($trendLabaRugi ?? []);
+
+    function cleanSeries(years, values){
+      const y = [];
+      const v = [];
+      for(let i=0;i<years.length;i++){
+        const yr = years[i];
+        const val = values[i];
+        if(yr === null || yr === undefined) continue;
+        if(val === null || val === undefined) continue;
+        y.push(yr);
+        v.push(Number(val));
+      }
+      return { years: y, values: v };
+    }
+
+    const prodSeries = cleanSeries(trendYearsRaw, trendProduksiRaw);
+    const labaSeries = cleanSeries(trendYearsRaw, trendLabaRugiRaw);
+
+    function setRangeText(elId, years){
+      const el = document.getElementById(elId);
+      if(!el) return;
+      if(!years || !years.length){ el.textContent = "-"; return; }
+      const minY = Math.min(...years.map(n => Number(n)));
+      const maxY = Math.max(...years.map(n => Number(n)));
+      el.textContent = minY === maxY ? String(minY) : (minY + "–" + maxY);
+    }
+
+    setRangeText("prodRange", prodSeries.years);
+    setRangeText("labaRange", labaSeries.years);
+
+    function pctList(values){
+      const out = [];
+      for(let i=0;i<values.length;i++){
+        if(i===0){ out.push(null); continue; }
+        const prev = Number(values[i-1] ?? 0);
+        const cur = Number(values[i] ?? 0);
+        if(!Number.isFinite(prev) || !Number.isFinite(cur)) { out.push(null); continue; }
+        if(prev === 0){ out.push(null); continue; }
+        out.push(((cur - prev) / prev) * 100);
+      }
+      return out;
+    }
+
+    function fmtPct(p){
+      if(p === null || !Number.isFinite(p)) return "";
+      const sign = p >= 0 ? "+" : "";
+      return sign + p.toFixed(1).replace(".", ",") + "%";
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      const radius = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    const pctPluginFactory = (pctValues) => ({
+      id: 'pctPlugin',
+      afterDatasetsDraw(chart){
+        const meta = chart.getDatasetMeta(0);
+        if(!meta || !meta.data || !meta.data.length) return;
+
+        const {ctx, chartArea} = chart;
+        ctx.save();
+        ctx.font = '800 12px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        let lastX = -9999;
+
+        meta.data.forEach((pt, i) => {
+          const p = pctValues[i];
+          if(p === null || !Number.isFinite(p)) return;
+          if(i === 0) return;
+
+          const label = fmtPct(p);
+          if(!label) return;
+
+          const x = pt.x;
+          if (Math.abs(x - lastX) < 34) return;
+
+          const isNeg = p < 0;
+          const y = isNeg ? (pt.y + 18) : (pt.y - 18);
+
+          const clampedY = Math.max(chartArea.top + 10, Math.min(chartArea.bottom - 10, y));
+          const textW = ctx.measureText(label).width;
+          const padX = 8, padY = 6;
+          const boxW = textW + padX*2;
+          const boxH = 22;
+          const boxX = x - boxW/2;
+          const boxY = clampedY - boxH/2;
+
+          const safeX = Math.max(chartArea.left + 4, Math.min(chartArea.right - boxW - 4, boxX));
+          const safeY = Math.max(chartArea.top + 4, Math.min(chartArea.bottom - boxH - 4, boxY));
+
+          ctx.fillStyle = 'rgba(233, 246, 238, .95)';
+          ctx.strokeStyle = 'rgba(46,125,50,.28)';
+          ctx.lineWidth = 1;
+
+          roundRect(ctx, safeX, safeY, boxW, boxH, 10);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#1b5e20';
+          ctx.fillText(label, safeX + boxW/2, safeY + boxH/2);
+
+          lastX = x;
+        });
+
+        ctx.restore();
+      }
+    });
+
+    const prodEl = document.getElementById('trendProduksiChart');
+    if (prodEl) {
+      const prodPct = pctList(prodSeries.values);
+
+      new Chart(prodEl, {
+        type: 'line',
+        data: {
+          labels: prodSeries.years,
+          datasets: [{
+            label: 'Produksi (kg)',
+            data: prodSeries.values,
+            borderColor: '#2e7d32',
+            backgroundColor: 'rgba(46, 125, 50, 0.08)',
+            pointBackgroundColor: '#2e7d32',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            tension: 0.35,
+            fill: true,
+            pointRadius: 4,
+            pointHoverRadius: 5,
+            borderWidth: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 16, right: 6, bottom: 4, left: 6 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => 'Produksi: ' + Number(ctx.parsed.y ?? 0).toLocaleString('id-ID') + ' kg'
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { autoSkip: true, maxRotation: 0, minRotation: 0 }
+            },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(229,231,235,.9)' },
+              ticks: { callback: (v) => Number(v).toLocaleString('id-ID') }
+            }
+          }
+        },
+        plugins: [pctPluginFactory(prodPct)]
+      });
+    }
+
+    const labaEl = document.getElementById('trendLabaRugiChart');
+    if (labaEl) {
+      const years = labaSeries.years;
+      const values = labaSeries.values;
+
+      const laba = values.map(v => (Number(v) >= 0 ? Number(v) : null));
+      const rugi = values.map(v => (Number(v) < 0 ? Math.abs(Number(v)) : null));
+
+      new Chart(labaEl, {
+        type: 'bar',
+        data: {
+          labels: years,
+          datasets: [
+            {
+              label: 'Laba (Rp)',
+              data: laba,
+              backgroundColor: 'rgba(22, 163, 74, 0.8)',
+              borderColor: '#16a34a',
+              borderWidth: 1,
+              borderRadius: 10,
+              borderSkipped: false
+            },
+            {
+              label: 'Rugi (Rp)',
+              data: rugi,
+              backgroundColor: 'rgba(220, 38, 38, 0.8)',
+              borderColor: '#dc2626',
+              borderWidth: 1,
+              borderRadius: 10,
+              borderSkipped: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { top: 10, right: 6, bottom: 4, left: 6 } },
+          plugins: {
+            legend: { display: true, position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const val = Number(ctx.parsed.y ?? 0);
+                  const prefix = ctx.dataset.label.includes("Rugi") ? "Rugi" : "Laba";
+                  return prefix + ': Rp ' + val.toLocaleString('id-ID');
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { autoSkip: true, maxRotation: 0, minRotation: 0 } },
+            y: {
+              beginAtZero: true,
+              grid: { color: 'rgba(229,231,235,.9)' },
+              ticks: { callback: (v) => 'Rp ' + Number(v).toLocaleString('id-ID') }
+            }
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>

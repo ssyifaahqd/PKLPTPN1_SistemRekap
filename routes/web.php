@@ -16,8 +16,8 @@ use App\Http\Controllers\Worker\ExcelLabaRugiController;
 use App\Http\Controllers\Worker\ExcelProduksiKopiController;
 
 use App\Http\Controllers\Admin\InputKaryawanBaruController;
-use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DashboardAdminController;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\HTTP\Controllers\Admin\AdminUserController;
 
 use App\Models\User;
@@ -109,27 +109,8 @@ Route::middleware('auth')->group(function () {
         ->name('admin.')
         ->group(function () {
 
-            Route::get('/dashboard', function () {
-
-                $today = Carbon::today();
-
-                $adminStats = [
-                    'total_users' => (int) User::count(),
-                    'total_karyawan' => (int) Karyawan::count(),
-                    'kategori_keuangan' => class_exists(KategoriKeuangan::class)
-                        ? (int) KategoriKeuangan::count()
-                        : 0,
-                    'logs_today' => (int) ActivityLog::whereDate('created_at', $today)->count(),
-                ];
-
-                $recentLogs = ActivityLog::query()
-                    ->with(['user', 'karyawan'])
-                    ->latest()
-                    ->limit(10)
-                    ->get();
-
-                return view('admin.dashboardAdmin', compact('adminStats', 'recentLogs'));
-            })->name('dashboard');
+            Route::get('/dashboard', [DashboardAdminController::class, 'index'])
+                ->name('dashboard');
 
             Route::get('/karyawan', function () {
 
