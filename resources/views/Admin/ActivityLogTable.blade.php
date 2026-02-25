@@ -371,12 +371,12 @@
           <div class="filterLeft">
 
             <div class="field">
-              <label>Module</label>
+              <label>Modul</label>
               <input type="text" name="module" value="{{ request('module') }}" placeholder="Contoh: Karyawan" />
             </div>
 
             <div class="field">
-              <label>Action</label>
+              <label>Aksi</label>
               <select name="action">
                 @php $a = request('action', ''); @endphp
                 <option value="" @selected($a==='')>Semua</option>
@@ -409,10 +409,10 @@
             <thead>
               <tr>
                 <th style="width:170px;">Waktu</th>
-                <th style="width:120px;">Action</th>
-                <th style="width:170px;">Module</th>
+                <th style="width:120px;">Aksi</th>
+                <th style="width:170px;">Modul</th>
                 <th style="width:180px;">Karyawan</th>
-                <th>Deskripsi</th>
+                <th>Keterangan</th>
                 <th style="width:120px;">IP Address</th>
               </tr>
             </thead>
