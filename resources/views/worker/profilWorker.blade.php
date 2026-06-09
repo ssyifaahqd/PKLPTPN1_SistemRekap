@@ -125,7 +125,7 @@
     /* Cards */
     .grid{
       display:grid;
-      grid-template-columns: 1fr; /* ✅ jadi 1 kolom aja */
+      grid-template-columns: 1fr; 
       gap:18px;
       align-items:start;
     }
@@ -211,7 +211,6 @@
       line-height:1.6;
     }
 
-    /* ✅ tombol dipindah jadi satu box di dalam card identitas */
     .actionBox{
       margin-top:14px;
       border:1px solid rgba(46,125,50,.18);

@@ -18,9 +18,11 @@ class ExcelLabaRugiController extends Controller
     public function export(Request $request)
     {
         $filterTahun = $request->filled('tahun') ? (int) $request->tahun : null;
+        $filterBulan = $request->filled('bulan') ? (int) $request->bulan : null;
 
         $q = PendapatanBiayaBulanan::query();
         if ($filterTahun) $q->where('tahun', $filterTahun);
+        if ($filterBulan) $q->where('bulan', $filterBulan);
 
         $raw = $q->get()
             ->groupBy(['tahun', 'bulan']);
@@ -30,6 +32,12 @@ class ExcelLabaRugiController extends Controller
         $bulanNama = [
             1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
             7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+        ];
+
+        $bulanNamaLengkap = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
         ];
 
         $spreadsheet = new Spreadsheet();
@@ -91,9 +99,13 @@ class ExcelLabaRugiController extends Controller
         $sheet->getStyle("A{$row}")->applyFromArray($left);
         $row += 2;
 
+        $bulanLoop = $filterBulan ? [$filterBulan] : range(1, 12);
+
         foreach ($tahunKeys as $tahun) {
+            $judulBulan = $filterBulan ? ' — ' . $bulanNamaLengkap[$filterBulan] : '';
+
             $sheet->mergeCells("A{$row}:{$lastCol}{$row}");
-            $sheet->setCellValue("A{$row}", "Laporan Laba Rugi Agrowisata — Tahun {$tahun}");
+            $sheet->setCellValue("A{$row}", "Laporan Laba Rugi Agrowisata — Tahun {$tahun}{$judulBulan}");
             $sheet->getStyle("A{$row}")->applyFromArray($bold + $left);
             $sheet->getStyle("A{$row}")->getFont()->setSize(12);
             $row++;
@@ -138,12 +150,10 @@ class ExcelLabaRugiController extends Controller
 
             $row += 2;
 
-            $startDataRow = $row;
-
             $totPW = 0; $totPR = 0; $totPP = 0;
             $totBW = 0; $totBR = 0; $totBP = 0;
 
-            for ($bulan = 1; $bulan <= 12; $bulan++) {
+            foreach ($bulanLoop as $bulan) {
                 $items = $raw[$tahun][$bulan] ?? collect();
 
                 $pW = (float) optional($items->firstWhere('kategori_id', 1))->pendapatan ?? 0;
@@ -236,7 +246,10 @@ class ExcelLabaRugiController extends Controller
             $row += 2;
         }
 
-        $filename = 'Laporan_Laba_Rugi' . ($filterTahun ? "_{$filterTahun}" : '') . '.xlsx';
+        $filename = 'Laporan_Laba_Rugi'
+            . ($filterTahun ? "_{$filterTahun}" : '')
+            . ($filterBulan ? '_' . $bulanNamaLengkap[$filterBulan] : '')
+            . '.xlsx';
 
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);
